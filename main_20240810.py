@@ -5,6 +5,8 @@ from gurobipy import GRB
 import streamlit as st
 from datetime import datetime, timedelta
 import random
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 # Function to generate random portfolio with stock lots
@@ -52,7 +54,7 @@ def calculate_tax_payment(portfolio, current_prices, tax_rate_lt, tax_rate_st):
 
 
 # Optimization function using Gurobi
-def optimize_portfolio(portfolio, current_prices, desired_allocation, tax_rate_lt, tax_rate_st, alpha):
+def optimize_portfolio(portfolio, current_prices, desired_allocation, tax_rate_lt, tax_rate_st, max_tax_burden):
     total_value, current_allocation = calculate_portfolio_stats(portfolio, current_prices)
 
     if total_value == 0:
@@ -62,35 +64,41 @@ def optimize_portfolio(portfolio, current_prices, desired_allocation, tax_rate_l
     m = gp.Model("Portfolio Optimization")
 
     # Decision variables
-    sell = m.addVars(len(portfolio), vtype=GRB.BINARY, name="sell")
+    sell_pct = m.addVars(len(portfolio), lb=0, ub=1, name="sell_pct")
 
     # Constraints
-    m.addConstr(gp.quicksum(sell[i] * portfolio['Quantity'][i] * portfolio['Current Price'][i] for i in
+    m.addConstr(gp.quicksum(sell_pct[i] * portfolio['Quantity'][i] * portfolio['Current Price'][i] for i in
                             range(len(portfolio))) <= total_value, "budget")
 
     if desired_allocation[0] > 0:
         m.addConstr(gp.quicksum(
-            sell[i] * portfolio['Quantity'][i] * portfolio['Current Price'][i] for i in range(len(portfolio)) if
+            sell_pct[i] * portfolio['Quantity'][i] * portfolio['Current Price'][i] for i in range(len(portfolio)) if
             portfolio['Asset'][i].startswith("Stock")) >= desired_allocation[0] * total_value, "stock_allocation_lower")
 
     if desired_allocation[1] < 1:
         m.addConstr(gp.quicksum(
-            sell[i] * portfolio['Quantity'][i] * portfolio['Current Price'][i] for i in range(len(portfolio)) if
+            sell_pct[i] * portfolio['Quantity'][i] * portfolio['Current Price'][i] for i in range(len(portfolio)) if
             portfolio['Asset'][i].startswith("Stock")) <= desired_allocation[1] * total_value, "stock_allocation_upper")
 
+    tax_payment = gp.quicksum(
+        (portfolio['Current Price'][i] - portfolio['Buy Price'][i]) * sell_pct[i] * portfolio['Quantity'][i] * (
+            tax_rate_lt if portfolio['Days Held'][i] > 365 else tax_rate_st) for i in range(len(portfolio)) if
+        portfolio['Current Price'][i] > portfolio['Buy Price'][i])
+    m.addConstr(tax_payment <= max_tax_burden, "max_tax_burden")
+
     # Objective
-    tax_payment = calculate_tax_payment(portfolio, current_prices, tax_rate_lt, tax_rate_st)
     allocation_deviation = gp.quicksum(
-        sell[i] * portfolio['Quantity'][i] * portfolio['Current Price'][i] for i in range(len(portfolio)) if
+        sell_pct[i] * portfolio['Quantity'][i] * portfolio['Current Price'][i] for i in range(len(portfolio)) if
         portfolio['Asset'][i].startswith("Stock")) - desired_allocation[0] * total_value
-    m.setObjective(alpha * tax_payment + (1 - alpha) * allocation_deviation, GRB.MINIMIZE)
+    m.setObjective(allocation_deviation, GRB.MINIMIZE)
 
     m.optimize()
 
     if m.status == GRB.OPTIMAL:
         optimized_portfolio = portfolio.copy()
-        optimized_portfolio['Sell'] = [int(var.x) for var in sell.values()]
-        trades = optimized_portfolio[optimized_portfolio['Sell'] == 1]
+        optimized_portfolio['Sell Qty'] = [round(var.x * portfolio['Quantity'][i]) for i, var in
+                                           enumerate(sell_pct.values())]
+        trades = optimized_portfolio[optimized_portfolio['Sell Qty'] > 0]
         return optimized_portfolio, trades
     else:
         print('No optimal solution found.')
@@ -138,13 +146,13 @@ def main():
     tax_rate_lt = st.slider('Long-term Capital Gains Tax Rate', min_value=0.0, max_value=1.0, value=0.15)
     tax_rate_st = st.slider('Short-term Capital Gains Tax Rate', min_value=0.0, max_value=1.0, value=0.35)
 
-    # Get optimization parameter alpha
-    alpha = st.slider('Optimization Parameter (Alpha)', min_value=0.0, max_value=1.0, value=0.5)
+    # Get maximum tax burden
+    max_tax_burden = st.number_input('Maximum Tax Burden ($)', min_value=0, value=1000, step=100)
 
     # Optimize portfolio
     if st.button('Optimize Portfolio'):
         optimized_portfolio, trades = optimize_portfolio(portfolio, current_prices, desired_allocation, tax_rate_lt,
-                                                         tax_rate_st, alpha)
+                                                         tax_rate_st, max_tax_burden)
         if optimized_portfolio is not None:
             st.subheader('Optimized Portfolio')
             st.write(optimized_portfolio)
@@ -168,3 +176,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

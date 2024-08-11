@@ -4,7 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f4e9fec8-c292-4a9d-813d-b79363d69166" name="Changes" comment="1st version">
+    <list default="true" id="f4e9fec8-c292-4a9d-813d-b79363d69166" name="Changes" comment="working 1st version">
+      <change afterPath="$PROJECT_DIR$/testing_sript.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main_20240810.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_20240810.py" afterDir="false" />
     </list>
@@ -64,11 +65,20 @@
       <option name="project" value="LOCAL" />
       <updated>1723331788356</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="working 1st version">
+      <option name="closed" value="true" />
+      <created>1723333645364</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1723333645364</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="1st version" />
-    <option name="LAST_COMMIT_MESSAGE" value="1st version" />
+    <MESSAGE value="working 1st version" />
+    <option name="LAST_COMMIT_MESSAGE" value="working 1st version" />
   </component>
 </project>
