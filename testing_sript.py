@@ -1,6 +1,14 @@
 import gurobipy as gp
 from gurobipy import GRB
+import io
+import base64
+import openpyxl
 
+
+
+def generate_random_portfolio(num_stocks=10, num_bonds=5):
+    portfolio = []
+    tickers = [f"STOCK_{i}" for i in range(num_stocks)] + [f"BOND_{i}" for i in range(num_bonds)]
 
 # Create a new model
 model = gp.Model("production_optimization")
