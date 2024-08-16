@@ -4,9 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f4e9fec8-c292-4a9d-813d-b79363d69166" name="Changes" comment="code with $ tax hit">
+    <list default="true" id="f4e9fec8-c292-4a9d-813d-b79363d69166" name="Changes" comment="good UI. Shit optimizer. Need to work on this.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main_20240810.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_20240810.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testing_sript.py" beforeDir="false" afterPath="$PROJECT_DIR$/testing_sript.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -80,24 +81,46 @@
       <option name="project" value="LOCAL" />
       <updated>1723401495998</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="good UI. Shit optimizer. Need to work on this.">
+      <option name="closed" value="true" />
+      <created>1723505201233</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1723505201233</updated>
+    </task>
+    <task id="LOCAL-00005" summary="good UI. Shit optimizer. Need to work on this.">
+      <option name="closed" value="true" />
+      <created>1723505485294</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1723505485294</updated>
+    </task>
+    <task id="LOCAL-00006" summary="good UI. Shit optimizer. Need to work on this.">
+      <option name="closed" value="true" />
+      <created>1723505525109</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1723505525109</updated>
+    </task>
+    <task id="LOCAL-00007" summary="good UI. Shit optimizer. Need to work on this.">
+      <option name="closed" value="true" />
+      <created>1723505535773</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1723505535773</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="1st version" />
     <MESSAGE value="working 1st version" />
     <MESSAGE value="code with $ tax hit" />
-    <option name="LAST_COMMIT_MESSAGE" value="code with $ tax hit" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/main_20240810.py</url>
-          <line>1</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+    <MESSAGE value="good UI. Shit optimizer. Need to work on this." />
+    <option name="LAST_COMMIT_MESSAGE" value="good UI. Shit optimizer. Need to work on this." />
   </component>
 </project>

@@ -53,87 +53,138 @@ def optimize_portfolio(portfolio, target_allocation, max_tax_burden, short_term_
         # Calculate initial portfolio value and allocation
         portfolio['Value'] = portfolio['Quantity'] * portfolio['Current Price']
         initial_value = portfolio['Value'].sum()
-        initial_stock_allocation = portfolio[portfolio['Ticker'].str.contains('STOCK')]['Value'].sum() / initial_value
+        initial_stock_value = portfolio[portfolio['Ticker'].str.contains('STOCK')]['Value'].sum()
+        initial_bond_value = initial_value - initial_stock_value
+        initial_stock_allocation = initial_stock_value / initial_value
         initial_bond_allocation = 1 - initial_stock_allocation
 
-        st.write(f"Initial portfolio value: ${initial_value:.2f}")
+        st.write(f"Initial portfolio value: ${initial_value:,.2f}")
         st.write(f"Initial stock allocation: {initial_stock_allocation:.2%}")
         st.write(f"Initial bond allocation: {initial_bond_allocation:.2%}")
 
         # Create optimization model
-        model = gp.Model("PortfolioOptimization")
+        model = gp.Model("PortfolioRebalancing")
 
-        # Decision variables: amount to sell for each lot
-        sell_amounts = model.addVars(portfolio.index, lb=0, name="sell_amounts")
-
-        for i in portfolio.index:
-            model.addConstr(sell_amounts[i] <= portfolio.loc[i, 'Value'])
+        # Decision variables
+        sell_fractions = model.addVars(portfolio.index, lb=0, ub=1, name="sell_fractions")
+        buy_amounts = model.addVars(portfolio['Ticker'].unique(), lb=0, name="buy_amounts")
 
         # Calculate capital gains and taxes
         long_term_mask = (pd.Timestamp.now() - portfolio['Buy Date']).dt.days > 365
-        portfolio['Capital Gain'] = (portfolio['Current Price'] - portfolio['Buy Price']) * portfolio['Quantity']
         portfolio['Tax Rate'] = np.where(long_term_mask, long_term_tax_rate, short_term_tax_rate)
-        portfolio['Tax'] = portfolio['Capital Gain'] * portfolio['Tax Rate']
+        portfolio['Capital Gain Per Share'] = portfolio['Current Price'] - portfolio['Buy Price']
 
-        # Objective: Minimize the absolute difference from target allocation
-        target_stock_value = target_allocation * initial_value
-        current_stock_value = portfolio[portfolio['Ticker'].str.contains('STOCK')]['Value'].sum()
-
-        st.write(f"Target stock value: ${target_stock_value:.2f}")
-        st.write(f"Current stock value: ${current_stock_value:.2f}")
-
-        abs_diff = model.addVar(name="abs_diff")
-        model.addConstr(
-            (current_stock_value - gp.quicksum(
-                sell_amounts[i] for i in portfolio[portfolio['Ticker'].str.contains('STOCK')].index))
-            - target_stock_value <= abs_diff
-        )
-        model.addConstr(
-            target_stock_value - (current_stock_value - gp.quicksum(
-                sell_amounts[i] for i in portfolio[portfolio['Ticker'].str.contains('STOCK')].index))
-            <= abs_diff
-        )
-
-        model.setObjective(abs_diff, GRB.MINIMIZE)
+        # Variables for allocation deviation
+        pos_deviation = model.addVar(name="positive_deviation")
+        neg_deviation = model.addVar(name="negative_deviation")
 
         # Constraints
-        # 1. Tax burden
-        model.addConstr(gp.quicksum(sell_amounts[i] * portfolio.loc[i, 'Tax'] / portfolio.loc[i, 'Value'] for i in
-                                    portfolio.index) <= max_tax_burden)
+        # 1. Target allocation
+        target_stock_value = target_allocation * initial_value
+        current_stock_value = (
+                gp.quicksum((1 - sell_fractions[i]) * portfolio.loc[i, 'Value'] for i in
+                            portfolio[portfolio['Ticker'].str.contains('STOCK')].index) +
+                gp.quicksum(buy_amounts[t] for t in portfolio['Ticker'].unique() if 'STOCK' in t)
+        )
+        model.addConstr(current_stock_value - target_stock_value <= pos_deviation)
+        model.addConstr(target_stock_value - current_stock_value <= neg_deviation)
+
+        # 2. Tax calculation
+        tax_paid = gp.quicksum(
+            sell_fractions[i] * portfolio.loc[i, 'Quantity'] * portfolio.loc[i, 'Capital Gain Per Share'] *
+            portfolio.loc[i, 'Tax Rate']
+            for i in portfolio.index
+        )
+        model.addConstr(tax_paid <= max_tax_burden)
+
+        # 3. Cash balance (money from selling = money for buying)
+        cash_from_selling = gp.quicksum(sell_fractions[i] * portfolio.loc[i, 'Value'] for i in portfolio.index)
+        cash_for_buying = gp.quicksum(buy_amounts[t] for t in portfolio['Ticker'].unique())
+        model.addConstr(cash_from_selling == cash_for_buying)
+
+        # 4. Prevent unnecessary trading
+        total_traded = cash_from_selling + cash_for_buying
+        model.addConstr(total_traded <= 2 * abs(target_stock_value - initial_stock_value))
+
+        model.addConstr(
+            gp.quicksum((1 - sell_fractions[i]) * portfolio.loc[i, 'Value'] for i in portfolio.index) +
+            gp.quicksum(buy_amounts[t] for t in portfolio['Ticker'].unique()) ==
+            initial_value,
+            "maintain_total_value"
+        )
+
+        # Objective: Balance allocation accuracy and tax minimization
+        allocation_weight = 1  # Adjust this weight to prioritize allocation accuracy
+        model.setObjective(allocation_weight * (pos_deviation + neg_deviation) + tax_paid, GRB.MINIMIZE)
 
         # Optimize
         model.optimize()
 
         st.write(f"Optimization status: {model.status}")
-        st.write(f"Objective value: {model.objVal}")
 
         if model.status == GRB.OPTIMAL:
+            st.write(f"Allocation deviation: ${(pos_deviation.x + neg_deviation.x):,.2f}")
+            # st.write(f"Tax paid: ${tax_paid.x:,2f}")
+
+            actual_tax_paid = sum(
+                sell_fractions[i].x * portfolio.loc[i, 'Quantity'] * portfolio.loc[i, 'Capital Gain Per Share'] *
+                portfolio.loc[i, 'Tax Rate']
+                for i in portfolio.index
+            )
+            st.write(f"Tax paid: ${actual_tax_paid:,.2f}")
+
             # Extract results
             optimized_portfolio = portfolio.copy()
-            optimized_portfolio['Sell Amount'] = [sell_amounts[i].x for i in portfolio.index]
-            optimized_portfolio['Sell Quantity'] = np.floor(
-                optimized_portfolio['Sell Amount'] / optimized_portfolio['Current Price'])
+            optimized_portfolio['Sell Fraction'] = [sell_fractions[i].x for i in portfolio.index]
+            optimized_portfolio['Sell Quantity'] = np.floor(optimized_portfolio['Sell Fraction'] * optimized_portfolio['Quantity'])
             optimized_portfolio['New Quantity'] = optimized_portfolio['Quantity'] - optimized_portfolio['Sell Quantity']
-            optimized_portfolio['New Value'] = optimized_portfolio['New Quantity'] * optimized_portfolio[
-                'Current Price']
-            optimized_portfolio['Tax Paid'] = optimized_portfolio['Sell Quantity'] * (
-                        optimized_portfolio['Current Price'] - optimized_portfolio['Buy Price']) * optimized_portfolio[
-                                                  'Tax Rate']
+            optimized_portfolio['Sell Value'] = optimized_portfolio['Sell Quantity'] * optimized_portfolio['Current Price']
+            optimized_portfolio['New Value'] = optimized_portfolio['New Quantity'] * optimized_portfolio['Current Price']
+            optimized_portfolio['Tax Paid'] = optimized_portfolio['Sell Quantity'] * optimized_portfolio['Capital Gain Per Share'] * optimized_portfolio['Tax Rate']
 
-            new_stock_value = optimized_portfolio[optimized_portfolio['Ticker'].str.contains('STOCK')][
-                'New Value'].sum()
-            new_total_value = optimized_portfolio['New Value'].sum()
+            # Handle buying
+            buy_results = pd.DataFrame({
+                'Ticker': portfolio['Ticker'].unique(),
+                'Buy Amount': [buy_amounts[t].x for t in portfolio['Ticker'].unique()]
+            })
+            buy_results['Buy Quantity'] = np.floor(buy_results['Buy Amount'] / buy_results['Ticker'].map(portfolio.groupby('Ticker')['Current Price'].first()))
+
+            # Merge buy results into optimized portfolio
+            optimized_portfolio = optimized_portfolio.merge(buy_results[['Ticker', 'Buy Quantity']], on='Ticker',how='left')
+            optimized_portfolio['Buy Quantity'] = optimized_portfolio['Buy Quantity'].fillna(0)
+            optimized_portfolio['Final Quantity'] = optimized_portfolio['New Quantity'] + optimized_portfolio['Buy Quantity']
+            optimized_portfolio['Final Value'] = optimized_portfolio['Final Quantity'] * optimized_portfolio['Current Price']
+
+            new_stock_value = optimized_portfolio[optimized_portfolio['Ticker'].str.contains('STOCK')]['Final Value'].sum()
+            new_total_value = optimized_portfolio['Final Value'].sum()
             new_stock_allocation = new_stock_value / new_total_value
             new_bond_allocation = 1 - new_stock_allocation
 
-            st.write(f"New stock value: ${new_stock_value:.2f}")
-            st.write(f"New total value: ${new_total_value:.2f}")
+            st.write(f"New stock value: ${new_stock_value:,.2f}")
+            st.write(f"New total value: ${new_total_value:,.2f}")
             st.write(f"New stock allocation: {new_stock_allocation:.2%}")
             st.write(f"New bond allocation: {new_bond_allocation:.2%}")
 
+            total_tax_paid = optimized_portfolio['Tax Paid'].sum()
+            st.write(f"Total tax paid: ${total_tax_paid:,.2f}")
+
+            st.subheader("Buy Summary")
+            st.write(buy_results[buy_results['Buy Quantity'] > 0])
+
+            st.subheader("Sell Summary")
+            st.write(optimized_portfolio[optimized_portfolio['Sell Quantity'] > 0][['Ticker', 'Sell Quantity', 'Sell Value', 'Tax Paid']])
+
             return optimized_portfolio, new_stock_allocation, new_bond_allocation
+        elif model.status == GRB.INFEASIBLE:
+            st.error("The model is infeasible. This could be due to conflicting constraints.")
+            model.computeIIS()
+            st.write("Conflicting constraints:")
+            for c in model.getConstrs():
+                if c.IISConstr:
+                    st.write(c.ConstrName)
+            return None, None, None
         else:
-            st.error("Optimization failed. The model is infeasible with the given constraints.")
+            st.error(f"Optimization failed with status code {model.status}.")
             return None, None, None
 
     except gp.GurobiError as e:
@@ -230,7 +281,7 @@ if 'portfolio' in st.session_state:
             st.write(trades)
 
             total_tax_paid = optimized_portfolio['Tax Paid'].sum()
-            st.write(f"Total Tax Paid: ${total_tax_paid:.2f}")
+            st.write(f"Total Tax Paid: ${total_tax_paid:,.2f}")
         else:
             st.error("Failed to optimize the portfolio. Please adjust your constraints and try again.")
 else:
