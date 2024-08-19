@@ -4,9 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f4e9fec8-c292-4a9d-813d-b79363d69166" name="Changes" comment="Fully working model.">
-      <change afterPath="$PROJECT_DIR$/main_20240819.py" afterDir="false" />
+    <list default="true" id="f4e9fec8-c292-4a9d-813d-b79363d69166" name="Changes" comment="Fully working model with minor cosmetic changes">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main_20240819.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_20240819.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -134,7 +134,15 @@
       <option name="project" value="LOCAL" />
       <updated>1724011830782</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="Fully working model with minor cosmetic changes">
+      <option name="closed" value="true" />
+      <created>1724105366133</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1724105366133</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -144,6 +152,7 @@
     <MESSAGE value="good UI. Shit optimizer. Need to work on this." />
     <MESSAGE value="sort of working. Mistakes in value of final and initial value of portfolio" />
     <MESSAGE value="Fully working model." />
-    <option name="LAST_COMMIT_MESSAGE" value="Fully working model." />
+    <MESSAGE value="Fully working model with minor cosmetic changes" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fully working model with minor cosmetic changes" />
   </component>
 </project>

@@ -6,10 +6,11 @@ from gurobipy import GRB
 import io
 import base64
 import openpyxl
+import plotly.graph_objects as go
 
 # Set page config
 # st.set_page_config(page_title="Portfolio Optimizer", layout="wide")
-st.set_page_config(page_title="Portfolio Optimizer", layout="wide", page_icon=":money_with_wings:")
+st.set_page_config(page_title="Portfolio Optimizer", layout="wide", page_icon=":abacus:")
 st.markdown(f'<style>{open("style.css").read()}</style>', unsafe_allow_html=True)
 
 
@@ -63,9 +64,9 @@ def optimize_portfolio(portfolio, target_allocation, max_tax_burden, short_term_
         initial_stock_allocation = initial_stock_value / initial_value
         initial_bond_allocation = 1 - initial_stock_allocation
 
-        st.write(f"Initial portfolio value: ${initial_value:.2f}")
-        st.write(f"Initial stock allocation: {initial_stock_allocation:.2%}")
-        st.write(f"Initial bond allocation: {initial_bond_allocation:.2%}")
+        # st.write(f"Initial portfolio value: ${initial_value:.2f}")
+        # st.write(f"Initial stock allocation: {initial_stock_allocation:.2%}")
+        # st.write(f"Initial bond allocation: {initial_bond_allocation:.2%}")
 
         # Create optimization model
         model = gp.Model("PortfolioRebalancing")
@@ -137,7 +138,7 @@ def optimize_portfolio(portfolio, target_allocation, max_tax_burden, short_term_
                 portfolio.loc[i, 'Tax Rate']
                 for i in portfolio.index)
 
-            st.write(f"Tax paid: ${actual_tax_paid:.2f}")
+            # st.write(f"Tax paid: ${actual_tax_paid:.2f}")
 
             # Extract results
             optimized_portfolio = portfolio.copy()
@@ -203,21 +204,22 @@ def optimize_portfolio(portfolio, target_allocation, max_tax_burden, short_term_
             new_stock_allocation = new_stock_value / new_total_value
             new_bond_allocation = 1 - new_stock_allocation
 
-            st.write(f"New stock value: ${new_stock_value:.2f}")
-            st.write(f"New total value: ${new_total_value:.2f}")
-            st.write(f"New stock allocation: {new_stock_allocation:.2%}")
-            st.write(f"New bond allocation: {new_bond_allocation:.2%}")
+            # st.write(f"New stock value: ${new_stock_value:.2f}")
+            # st.write(f"New total value: ${new_total_value:.2f}")
+            # st.write(f"New stock allocation: {new_stock_allocation:.2%}")
+            # st.write(f"New bond allocation: {new_bond_allocation:.2%}")
 
             total_tax_paid = optimized_portfolio['Tax Paid'].sum()
-            st.write(f"Total tax paid: ${total_tax_paid:.2f}")
+            # st.write(f"Total tax paid: ${total_tax_paid:.2f}")
 
-            st.write("Buy Summary")
-            st.write(buy_results[buy_results['Buy Quantity'] > 0])
-
-            st.write("Sell Summary")
-            st.write(optimized_portfolio[optimized_portfolio['Sell Quantity'] > 0][
-                      ['Ticker', 'Sell Quantity', 'Sell Value', 'Tax Paid']])
-            return optimized_portfolio, new_stock_allocation, new_bond_allocation
+            # st.write("Buy Summary")
+            # st.write(buy_results[buy_results['Buy Quantity'] > 0])
+            buy_summary = buy_results[buy_results['Buy Quantity'] > 0]
+            sell_summary = optimized_portfolio[optimized_portfolio['Sell Quantity'] > 0][['Ticker', 'Sell Quantity', 'Sell Value', 'Tax Paid']]
+            # st.write("Sell Summary")
+            # st.write(optimized_portfolio[optimized_portfolio['Sell Quantity'] > 0][
+            #           ['Ticker', 'Sell Quantity', 'Sell Value', 'Tax Paid']])
+            return optimized_portfolio, new_stock_allocation, new_bond_allocation, buy_summary, sell_summary
         elif model.status == GRB.INFEASIBLE:
             st.error("The model is infeasible. This could be due to conflicting constraints.")
             model.computeIIS()
@@ -225,10 +227,10 @@ def optimize_portfolio(portfolio, target_allocation, max_tax_burden, short_term_
             for c in model.getConstrs():
                 if c.IISConstr:
                     st.write(c.ConstrName)
-            return None, None, None
+            return None, None, None, None, None
         else:
             st.error(f"Optimization failed with status code {model.status}.")
-            return None, None, None
+            return None, None, None, None, None
 
     except gp.GurobiError as e:
         st.error(f"Gurobi error: {e}")
@@ -236,7 +238,7 @@ def optimize_portfolio(portfolio, target_allocation, max_tax_burden, short_term_
 
 
 # Streamlit UI
-st.title("Portfolio Optimizer :chart_with_upwards_trend:")
+st.title("Portfolio Optimizer :abacus:")
 
 container = st.container()
 with container:
@@ -260,71 +262,76 @@ with container:
 
     # Display current portfolio
     if 'portfolio' in st.session_state:
-        col1, col2 = st.columns(2)
-        with col1:
-            st.subheader("Current Portfolio :moneybag:")
-            st.write(st.session_state.portfolio)
+        st.subheader("Current Portfolio")
+        st.write(st.session_state.portfolio)
 
-            # Calculate current allocation
-            total_value = (st.session_state.portfolio['Quantity'] * st.session_state.portfolio['Current Price']).sum()
-            stock_value = st.session_state.portfolio[st.session_state.portfolio['Ticker'].str.contains('STOCK')]['Quantity'] * \
-                          st.session_state.portfolio[st.session_state.portfolio['Ticker'].str.contains('STOCK')]['Current Price']
-            current_stock_allocation = stock_value.sum() / total_value
-            current_bond_allocation = 1 - current_stock_allocation
+        # Calculate current allocation
+        total_value = (st.session_state.portfolio['Quantity'] * st.session_state.portfolio['Current Price']).sum()
+        stock_value = st.session_state.portfolio[st.session_state.portfolio['Ticker'].str.contains('STOCK')]['Quantity'] * \
+                      st.session_state.portfolio[st.session_state.portfolio['Ticker'].str.contains('STOCK')]['Current Price']
+        current_stock_allocation = stock_value.sum() / total_value
+        current_bond_allocation = 1 - current_stock_allocation
 
-            st.write(f"Current Stock Allocation: {current_stock_allocation:.2%}")
-            st.write(f"Current Bond Allocation: {current_bond_allocation:.2%}")
+        # Input for desired allocation
+        st.subheader("Desired Allocation")
+        allocation_options = {
+            "Most Conservative (10:90)": 0.1,
+            "Conservative (20:80)": 0.2,
+            "Moderately Conservative (30:70)": 0.3,
+            "Moderate (40:60)": 0.4,
+            "Balanced (50:50)": 0.5,
+            "Moderately Aggressive (60:40)": 0.6,
+            "Aggressive (70:30)": 0.7,
+            "Very Aggressive (80:20)": 0.8,
+            "Most Aggressive (90:10)": 0.9
+        }
+        selected_allocation = st.radio("Select desired stock:bond allocation:", list(allocation_options.keys()), index=4)
+        target_allocation = allocation_options[selected_allocation]
 
-        with col2:
-            # Input for desired allocation
-            st.subheader("Desired Allocation :dart:")
-            allocation_options = {
-                "Most Conservative (10:90)": 0.1,
-                "Conservative (20:80)": 0.2,
-                "Moderately Conservative (30:70)": 0.3,
-                "Moderate (40:60)": 0.4,
-                "Balanced (50:50)": 0.5,
-                "Moderately Aggressive (60:40)": 0.6,
-                "Aggressive (70:30)": 0.7,
-                "Very Aggressive (80:20)": 0.8,
-                "Most Aggressive (90:10)": 0.9
-            }
-            selected_allocation = st.radio("Select desired stock:bond allocation:", list(allocation_options.keys()), index=4)
-            target_allocation = allocation_options[selected_allocation]
-
-            # Input for tax rates and max tax burden
-            short_term_tax_rate = st.slider("Short-term Tax Rate (%)", min_value=0.0, max_value=100.0, value=35.0, step=0.1) / 100
-            long_term_tax_rate = st.slider("Long-term Tax Rate (%)", min_value=0.0, max_value=100.0, value=15.0, step=0.1) / 100
-            max_tax_burden = st.number_input("Maximum Tax Burden ($)", min_value=0, value=3000)
+        # Input for tax rates and max tax burden
+        short_term_tax_rate = st.slider("Short-term Tax Rate (%)", min_value=0.0, max_value=100.0, value=35.0, step=0.1) / 100
+        long_term_tax_rate = st.slider("Long-term Tax Rate (%)", min_value=0.0, max_value=100.0, value=15.0, step=0.1) / 100
+        max_tax_burden = st.number_input("Maximum Tax Burden ($)", min_value=0, value=3000)
 
         # Optimize button
         if st.button("Optimize Portfolio"):
             with st.spinner("Optimizing portfolio..."):
-                optimized_portfolio, new_stock_allocation, new_bond_allocation = optimize_portfolio(
+                optimized_portfolio, new_stock_allocation, new_bond_allocation, buy_summary, sell_summary = optimize_portfolio(
                     st.session_state.portfolio, target_allocation, max_tax_burden, short_term_tax_rate, long_term_tax_rate
                 )
 
             if optimized_portfolio is not None:
-                st.success("Optimized Portfolio :chart_with_upwards_trend:")
-                st.write(optimized_portfolio)
+                col1, col2 = st.columns(2)
 
-                st.success("Allocation Summary :pie:")
-                summary_data = {
-                    "": ["Stocks", "Bonds"],
-                    "Current Allocation": [f"{current_stock_allocation:.2%}", f"{current_bond_allocation:.2%}"],
-                    "Target Allocation": [f"{target_allocation:.2%}", f"{1 - target_allocation:.2%}"],
-                    "New Allocation": [f"{new_stock_allocation:.2%}", f"{new_bond_allocation:.2%}"]
-                }
-                st.table(pd.DataFrame(summary_data).set_index(""))
+                with col1:
+                    # Display current allocation as a pie chart
+                    fig_current = go.Figure(data=[go.Pie(labels=['Stocks', 'Bonds'], values=[current_stock_allocation, current_bond_allocation])])
+                    fig_current.update_layout(title='Current Allocation')
+                    st.plotly_chart(fig_current)
+
+                with col2:
+                    # Display new allocation as a pie chart
+                    fig_new = go.Figure(data=[go.Pie(labels=['Stocks', 'Bonds'], values=[new_stock_allocation, new_bond_allocation])])
+                    fig_new.update_layout(title='New Allocation')
+                    st.plotly_chart(fig_new)
+
+                st.success("Optimized Portfolio")
+                st.write(optimized_portfolio)
 
                 # st.info("Trade Summary :handshake:")
                 # trades = optimized_portfolio[optimized_portfolio['Sell Quantity'] > 0][
                 #     ['Ticker', 'Sell Quantity', 'Current Price', 'Tax Paid']]
                 # st.write(trades)
 
-                # total_tax_paid = optimized_portfolio['Tax Paid'].sum()
-                # st.write(f"Total Tax Paid: ${total_tax_paid:,.2f}")
+                st.write("Buy Summary")
+                st.write(buy_summary)
+                st.write("Sell Summary")
+                st.write(sell_summary)
+                total_tax_paid = optimized_portfolio['Tax Paid'].sum()
+                st.write(f"Total Tax Paid: ${total_tax_paid:,.2f}")
+
             else:
                 st.error("Failed to optimize the portfolio. Please adjust your constraints and try again.")
     else:
         st.info("Please generate a random portfolio or upload an Excel file to begin.")
+
