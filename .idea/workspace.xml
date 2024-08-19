@@ -4,10 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f4e9fec8-c292-4a9d-813d-b79363d69166" name="Changes" comment="sort of working. Mistakes in value of final and initial value of portfolio">
+    <list default="true" id="f4e9fec8-c292-4a9d-813d-b79363d69166" name="Changes" comment="Fully working model.">
+      <change afterPath="$PROJECT_DIR$/main_20240819.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main_20240810.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_20240810.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing_sript.py" beforeDir="false" afterPath="$PROJECT_DIR$/testing_sript.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -33,14 +32,20 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.main_20240810.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.main_20240810.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "/Users/himanshukhemani/Desktop/Projects/FST Optimizer/Tax Optimizer",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   }
-}</component>
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -121,7 +126,15 @@
       <option name="project" value="LOCAL" />
       <updated>1723770216735</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Fully working model.">
+      <option name="closed" value="true" />
+      <created>1724011830782</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1724011830782</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -130,6 +143,7 @@
     <MESSAGE value="code with $ tax hit" />
     <MESSAGE value="good UI. Shit optimizer. Need to work on this." />
     <MESSAGE value="sort of working. Mistakes in value of final and initial value of portfolio" />
-    <option name="LAST_COMMIT_MESSAGE" value="sort of working. Mistakes in value of final and initial value of portfolio" />
+    <MESSAGE value="Fully working model." />
+    <option name="LAST_COMMIT_MESSAGE" value="Fully working model." />
   </component>
 </project>

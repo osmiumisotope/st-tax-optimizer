@@ -1,0 +1,12 @@
+\ Model PortfolioOptimization_copy
+\ LP format - for model browsing. Use MPS format to capture full model detail.
+Minimize
+ 
+Subject To
+ R0: buy_stocks - sell_stocks = 716302.2856349903
+ R1: buy_stocks - sell_stocks + buy_bonds - sell_bonds = 0
+ R4: 0.049469128096105 sell_stocks + 0.0297673590666489 sell_bonds <= 3000
+Bounds
+ buy_stocks free
+ sell_bonds free
+End
