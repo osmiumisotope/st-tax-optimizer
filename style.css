@@ -1,8 +1,10 @@
 :root {
-    --primary-color: #ff4b4b;
-    --background-color: #2D3038;
-    --secondary-background-color: #e0e0e0;
-    --text-color: #DEE2E5;
+    --primary-color: #7b212c;
+    --background-color: #F7FAF6;
+    --secondary-background-color: #56922c;
+    --text-color: #000000;
+    --input-background-color: #84c2b0;
+    --input-text-color: #7fa502;
     --font-family: sans-serif;
 }
 
@@ -18,5 +20,9 @@
 }
 
 .stTextInput input {
-    background-color: var(--secondary-background-color);
+    background-color: var(--input-background-color);
+    color: var(--input-text-color);
+}
+
+.stTextInput label {color: var(--text-color);
 }
