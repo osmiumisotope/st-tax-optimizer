@@ -1,0 +1,22 @@
+:root {
+    --primary-color: #ff4b4b;
+    --background-color: #2D3038;
+    --secondary-background-color: #e0e0e0;
+    --text-color: #DEE2E5;
+    --font-family: sans-serif;
+}
+
+.stApp {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-family: var(--font-family);
+}
+
+.stButton button {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.stTextInput input {
+    background-color: var(--secondary-background-color);
+}
