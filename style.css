@@ -1,22 +1,73 @@
 :root {
-    --primary-color: #ff4b4b;
-    --background-color: #2D3038;
-    --secondary-background-color: #e0e0e0;
-    --text-color: #DEE2E5;
+    --primary-color: #1a5276;
+    --background-color: #f4f6f9;
+    --secondary-background-color: #d6e4f0;
+    --text-color: #1c1c1c;
+    --input-background-color: #ffffff;
+    --input-text-color: #1c1c1c;
     --font-family: sans-serif;
 }
 
+/* Main app background and text */
 .stApp {
     background-color: var(--background-color);
     color: var(--text-color);
     font-family: var(--font-family);
 }
 
-.stButton button {
-    background-color: var(--primary-color);
-    color: white;
+/* Headings and paragraphs */
+.stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp p, .stApp label {
+    color: var(--text-color) !important;
 }
 
-.stTextInput input {
+/* Sidebar */
+section[data-testid="stSidebar"] {
     background-color: var(--secondary-background-color);
+}
+section[data-testid="stSidebar"] * {
+    color: var(--text-color) !important;
+}
+
+/* Buttons */
+.stButton > button {
+    background-color: var(--primary-color) !important;
+    color: #ffffff !important;
+    border: none;
+    border-radius: 4px;
+}
+.stButton > button:hover {
+    background-color: #154360 !important;
+}
+
+/* Text inputs */
+.stTextInput input, .stNumberInput input {
+    background-color: var(--input-background-color) !important;
+    color: var(--input-text-color) !important;
+    border: 1px solid #aac4dd;
+}
+
+/* Sliders */
+.stSlider label, .stSlider p {
+    color: var(--text-color) !important;
+}
+
+/* Dataframes / tables */
+.stDataFrame, .stTable {
+    background-color: #ffffff;
+    color: var(--text-color);
+}
+
+/* Radio buttons */
+.stRadio label, .stRadio p {
+    color: var(--text-color) !important;
+}
+
+/* Info / success / error boxes */
+.stAlert {
+    color: var(--text-color) !important;
+}
+
+/* Subheaders */
+.stMarkdown h2, .stMarkdown h3 {
+    color: var(--primary-color) !important;
 }
