@@ -7,6 +7,16 @@ import io
 import base64
 import openpyxl
 import plotly.graph_objects as go
+import os
+import tempfile
+
+# Write Gurobi license from Streamlit secrets (required for Streamlit Cloud deployment)
+if "gurobi" in st.secrets and "license" in st.secrets["gurobi"]:
+    _lic_content = st.secrets["gurobi"]["license"]
+    _lic_path = os.path.join(tempfile.gettempdir(), "gurobi.lic")
+    with open(_lic_path, "w") as _f:
+        _f.write(_lic_content)
+    os.environ["GRB_LICENSE_FILE"] = _lic_path
 
 # Set page config
 # st.set_page_config(page_title="Portfolio Optimizer", layout="wide")
